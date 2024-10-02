@@ -22,51 +22,47 @@ function matrix(array) {
 
         }    
         if(row === end) {
-
             result.push(checkRepeatsMatrix(matrixArray))
-
-            matrixArray.forEach((item) => {
-                item.reverse().pop()  
-
-                item.reverse()
-
-            });   
-
+            matrixArray.forEach((item) => item.shift() )
             end++
         }  
     }
     return result
 }
 
+// console.log('>>>>>>>>>', matrix(doubleArray))
+
 function checkRepeatsMatrix(matrix) {
-    const array = []  
-    let result = true
-    for(let row = 0; row < matrix[0].length; row++) {      
-        for(let col = 0; col < matrix.length; col++) {
-            if(array.includes(matrix[col][row])) {            
-                result = false
-                break          
-            }
-            array.push(matrix[col][row])            
-            result = true
-        }    
-    }
-    return result
+    const flattedMatrix = matrix.flat();
+    const matrixAsSet = new Set(flattedMatrix)
+
+    return matrixAsSet.size === flattedMatrix.length;
+
+
+    // const check = new Map()
+    // let result = true
+    // matrix.forEach((item) => { 
+    //     item.forEach( (num) => { 
+    //         if(result) { 
+    //             check.set(num, (check.get(num) ? result = !result : 1)) 
+    //         }
+    //     })
+    // })
+    // return result
 }
 
 // console.log(matrix(doubleArray))
 
 // task two
 
-const operations = [
-    { "date": "2017-07-31", "amount": "5422" },    
+const operations = [   
     { "date": "2017-07-30", "amount": "5220" },    
     { "date": "2017-05-31", "amount": "5365" },    
     { "date": "2017-08-31", "amount": "5451" },    
     { "date": "2017-09-30", "amount": "5303" },    
     { "date": "2018-03-31", "amount": "5654" },    
     { "date": "2017-10-31", "amount": "5509" },    
-    { "date": "2017-12-31", "amount": "5567" },    
+    { "date": "2017-11-29", "amount": "5567" },    
     { "date": "2018-01-31", "amount": "5597" },    
     { "date": "2017-11-30", "amount": "5359" },    
     { "date": "2018-02-28", "amount": "5082" },    
@@ -76,32 +72,39 @@ const operations = [
 ]
 
 function groupingYear(dates) {    
-    let result = {}
-    if(dates.length === 0) return result    
-    dates.forEach(element => {
-        const date = new Date(Date.parse(element.date))        
-        if(`${date.getFullYear()}` in result) {
-           result[`${date.getFullYear()}`].push([date.getMonth() + 1, date.getDate()])        
-        } else {
-            result[`${date.getFullYear()}`] = [[date.getMonth() + 1, date.getDate()]]        
-        }
-    });  
-    result = sortDM(result, 1)  
-    result = sortDM(result, 0)
-     
-    for(let key in result) {
-        result[key] = result[key].map(item => item.join('-'))  
-    }
-    return result
-}
+    let result = new Map()
 
-function sortDM(array, index) {     
-    for(let [key, value] of Object.entries(array)) {
-        value.sort((a, b) => {
-            return a[index] - b[index]      
+    dates.forEach(element => {
+        const date = new Date(Date.parse(element.date))
+        const year = date.getFullYear().toString()
+        const month = date.getMonth() + 1
+        const day = date.getDate()
+        // result[year] = (year, result[year] ? [...result[year], [month, day]] : [[month, day]] )   
+        const existingYear = result.get(year);
+
+        if (existingYear) {
+            result.set(year, [...existingYear, [month, day]])
+        } else {
+            result.set(year, [[month, day]])
+        }
+    }); 
+    
+    return Array.from(result.entries()).reduce((acc, [year, values]) => {
+        const sortedValues = values.sort((a, b) => {
+            if (a[0] === b[0]) {
+                return a[1] - b[1]
+            }
+
+            return a[0] - b[0];
         })
-    }  
-    return array
+
+        acc[year] = sortedValues.join('-');
+
+        return acc;
+    }, {});
+
+
+    return result
 }
 
 // console.log(groupingYear(operations))
@@ -111,20 +114,16 @@ function sortDM(array, index) {
 const str = 'адрес карп кума куст мир мука парк рим среда стук рост сорт трос'; 
 // [[adres, sreda], [karp, park]]
 
-function checkAnagrams(text) {    const anagrams = {}
-    const result = []      
+function checkAnagrams(text) {
+    const anagrams = new Map()
     const originalWordsArray = text.split(' ')
-    const arrayWords = text.split(' ').map(word => word.toLowerCase().split('').sort().join(''))
-    arrayWords.forEach((i, index) => {      if(anagrams[i]) {
-        anagrams[i].push(index)      } else {
-        anagrams[i] = [index]      }
-    })  
-    for(let [key, value] of Object.entries(anagrams)) {        
-        const arr = []
-        value.forEach(item => arr.push(originalWordsArray[item]))        
-        result.push(arr)
-    }  
+    const sortedWordsArray = text.split(' ').map(word => word.toLowerCase().split('').sort().join(''))
+
+    const result = sortedWordsArray.reduce((result, word, index) => {
+        anagrams.set(word, anagrams.get(word) ? [...anagrams.get(word), originalWordsArray[index]] : [originalWordsArray[index]])
+        return result = [...anagrams.values()]
+    }, [])
     return result
 }
 
-// console.log(checkAnagrams(str))
+console.log(checkAnagrams(str))
